@@ -141,7 +141,6 @@ RUN del C:\TEMP\%WS_LONG_PATHS_7Z% && `
 
 WORKDIR C:\mediapipe
 
-COPY packages.config .
 COPY .bazelrc .
 COPY .bazelversion .
 COPY platform_mappings .

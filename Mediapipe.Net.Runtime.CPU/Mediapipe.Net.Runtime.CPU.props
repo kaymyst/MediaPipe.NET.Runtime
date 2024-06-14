@@ -1,0 +1,11 @@
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<PropertyGroup>
+		<MediapipeExternalNativeDlls>$(MSBuildThisFileDirectory)..\..\runtimes</MediapipeExternalNativeDlls>
+	</PropertyGroup>
+	<ItemGroup Condition="$(TargetFrameworkVersion.StartsWith('v4')) Or $(TargetFramework.StartsWith('net4'))">
+		<Content Include="$(MediapipeExternalNativeDlls)\win-x64\native\mediapipe_c.dll">
+			<Link>lib\x64\mediapipe_c.dll</Link>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+</Project>

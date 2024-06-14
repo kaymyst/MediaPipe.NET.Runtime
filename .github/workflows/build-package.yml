@@ -5,9 +5,6 @@ on:
       bazelBuildArgs:
         type: string
         description: A value for `--bazel_build_opts`
-      linuxBuildArgs:
-        type: string
-        description: Build options for Linux Build
       windowsBuildArgs:
         type: string
         description: Build options for Windows Build
@@ -20,6 +17,5 @@ jobs:
       ref: ${{ github.event.ref }}
       packageName: package
       bazelBuildArgs: ${{ inputs.bazelBuildArgs || '--experimental_scale_timeouts=10.0 --http_timeout_scaling=10.0' }}
-      linuxBuildArgs: ${{ inputs.linuxBuildArgs || '--desktop gpu --opencv cmake' }}
       windowsBuildArgs: ${{ inputs.windowsBuildArgs || '--desktop cpu --opencv cmake' }}
     secrets: inherit

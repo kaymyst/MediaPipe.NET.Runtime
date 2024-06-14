@@ -11,19 +11,9 @@ on:
       bazelBuildArgs:
         type: string
         default: '--experimental_scale_timeouts=10.0 --http_timeout_scaling=10.0'
-      linuxBuildArgs:
-        type: string
-        default: '--desktop gpu --opencv cmake'
       windowsBuildArgs:
         type: string
         default: '--desktop cpu --opencv cmake'
-    secrets:
-      UNITY_EMAIL:
-        required: false
-      UNITY_PASSWORD:
-        required: false
-      UNITY_TOTP_KEY:
-        required: false
 
 jobs:
   print-inputs:
@@ -32,37 +22,7 @@ jobs:
       - name: Print inputs for debug
         run: |
           echo 'inputs.ref=${{ inputs.ref }}'
-          echo 'inputs.bazelBuildArgs=${{ inputs.bazelBuildArgs }}'
-          echo 'inputs.linuxBuildArgs=${{ inputs.linuxBuildArgs }}'
-          echo 'inputs.androidBuildArgs=${{ inputs.androidBuildArgs }}'
-          echo 'inputs.macosBuildArgs=${{ inputs.macosBuildArgs }}'
-          echo 'inputs.iosBuildArgs=${{ inputs.iosBuildArgs }}'
-          echo 'inputs.windowsBuildArgs=${{ inputs.windowsBuildArgs }}'
-
-  linux-build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          ref: ${{ inputs.ref }}
-
-      - name: Build a Docker image
-        run: |
-          docker build --no-cache --build-arg UID=$(id -u) -t mediapipe_unity:latest . -f docker/linux/x86_64/Dockerfile
-
-      - name: Build
-        run: |
-          docker run --rm \
-            --mount type=bind,src=$PWD/Packages,dst=/home/mediapipe/Packages \
-            --mount type=bind,src=$PWD/Assets,dst=/home/mediapipe/Assets \
-            mediapipe_unity:latest \
-            python build.py build --bazel_build_opts="${{ inputs.bazelBuildArgs }}" ${{ inputs.linuxBuildArgs }} -vv
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: ${{ inputs.packageName }}-base
-          path: .
+          echo 'inputs.windowsBuildArgs=${{ inputs.windowsBuildArgs }}' 
 
   windows-build:
     runs-on: windows-2019

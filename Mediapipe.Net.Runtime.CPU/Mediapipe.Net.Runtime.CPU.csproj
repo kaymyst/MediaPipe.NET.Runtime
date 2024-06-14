@@ -10,7 +10,7 @@
   <PropertyGroup Label="Nuget">
     <IsPackable>true</IsPackable>
     <PackageId>Mediapipe.Net.Runtime.CPU.kaymyst</PackageId>
-    <Version>1.0.4</Version>
+    <Version>1.0.7</Version>
     <Authors>homuler;Vignette;kaymyst</Authors>
     <PackageTags>Google;Mediapipe;Tracking;Media Analysis</PackageTags>
     <Title>Mediapipe.Net.Runtime.CPU.kaymyst</Title>
@@ -40,6 +40,10 @@
     <None Include="..\Readme.md">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
+    </None>
+	<None Include="Mediapipe.Net.Runtime.CPU.props">
+      <Pack>True</Pack>
+      <PackagePath>build\net48\Mediapipe.Net.Runtime.CPU.kaymyst.props</PackagePath>
     </None>
     <None Include="_._">
       <!-- Means this package doesn't provide any reference assembly to the target framework.
