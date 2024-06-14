@@ -1,0 +1,146 @@
+name: Package
+on:
+  workflow_call:
+    inputs:
+      ref:
+        type: string
+        required: true
+      packageName:
+        type: string
+        default: package
+      bazelBuildArgs:
+        type: string
+        default: '--experimental_scale_timeouts=10.0 --http_timeout_scaling=10.0'
+      linuxBuildArgs:
+        type: string
+        default: '--desktop gpu --opencv cmake'
+      windowsBuildArgs:
+        type: string
+        default: '--desktop cpu --opencv cmake'
+    secrets:
+      UNITY_EMAIL:
+        required: false
+      UNITY_PASSWORD:
+        required: false
+      UNITY_TOTP_KEY:
+        required: false
+
+jobs:
+  print-inputs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print inputs for debug
+        run: |
+          echo 'inputs.ref=${{ inputs.ref }}'
+          echo 'inputs.bazelBuildArgs=${{ inputs.bazelBuildArgs }}'
+          echo 'inputs.linuxBuildArgs=${{ inputs.linuxBuildArgs }}'
+          echo 'inputs.androidBuildArgs=${{ inputs.androidBuildArgs }}'
+          echo 'inputs.macosBuildArgs=${{ inputs.macosBuildArgs }}'
+          echo 'inputs.iosBuildArgs=${{ inputs.iosBuildArgs }}'
+          echo 'inputs.windowsBuildArgs=${{ inputs.windowsBuildArgs }}'
+
+  linux-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Build a Docker image
+        run: |
+          docker build --no-cache --build-arg UID=$(id -u) -t mediapipe_unity:latest . -f docker/linux/x86_64/Dockerfile
+
+      - name: Build
+        run: |
+          docker run --rm \
+            --mount type=bind,src=$PWD/Packages,dst=/home/mediapipe/Packages \
+            --mount type=bind,src=$PWD/Assets,dst=/home/mediapipe/Assets \
+            mediapipe_unity:latest \
+            python build.py build --bazel_build_opts="${{ inputs.bazelBuildArgs }}" ${{ inputs.linuxBuildArgs }} -vv
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ inputs.packageName }}-base
+          path: .
+
+  windows-build:
+    runs-on: windows-2019
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Build a Docker image
+        run: |
+          docker build --no-cache -t mediapipe_unity:latest . -f docker/windows/x86_64/Dockerfile
+        shell: cmd
+        timeout-minutes: 60
+
+      - name: Build
+        run: |
+          docker run --rm --cpus=2 --memory=8g ^
+            --mount type=bind,src=%CD%\Packages,dst=C:\mediapipe\Packages ^
+            --mount type=bind,src=%CD%\Assets,dst=C:\mediapipe\Assets ^
+            mediapipe_unity:latest ^
+            python build.py build --bazel_build_opts="${{ inputs.bazelBuildArgs }}" ${{ inputs.windowsBuildArgs }} -vv
+        shell: cmd
+
+      - name: Upload mediapipe_c.dll
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ inputs.packageName }}-mediapipe_c.dll
+          path: Packages/com.github.homuler.mediapipe/Runtime/Plugins/mediapipe_c.dll
+
+  package:
+    runs-on: ubuntu-latest
+    needs:
+      - linux-build
+      - windows-build
+    steps:
+      
+      - name: Download mediapipe_c.dll
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ inputs.packageName }}-mediapipe_c.dll
+          path: Packages/com.github.homuler.mediapipe/Runtime/Plugins
+
+      - name: Zip all
+        run: |
+          zip -r MediaPipeUnityPlugin-all.zip . -x .git/**\*
+
+      - name: Export tarball
+        run: |
+          cd Packages/com.github.homuler.mediapipe
+          npm pack
+          mv com.github.homuler.mediapipe-*.tgz ../..
+
+      - name: Export unitypackage
+        if: ${{ env.BUILD_UNITYPACKAGE == '1' }}
+        run: |
+          unity-editor -quit -batchmode -nographics -silent-crashes -logFile -projectPath . -executeMethod PackageExporter.Export
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ inputs.packageName }}
+          path: |
+            com.github.homuler.mediapipe-*.tgz
+            *.unitypackage
+            MediaPipeUnityPlugin-all.zip
+          retention-days: 7
+
+  clean:
+    runs-on: ubuntu-latest
+    needs:
+      - package
+    steps:
+      - uses: geekyeggo/delete-artifact@v2
+        with:
+          name: ${{ inputs.packageName }}-base
+          failOnError: false
+
+      - uses: geekyeggo/delete-artifact@v2
+        with:
+          name: ${{ inputs.packageName }}-mediapipe_c.dll
+          failOnError: false

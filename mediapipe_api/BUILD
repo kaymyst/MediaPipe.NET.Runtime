@@ -9,6 +9,7 @@ load("@bazel_skylib//lib:selects.bzl", "selects")
 load("@bazel_skylib//rules:common_settings.bzl", "bool_flag", "string_list_flag")
 load("@rules_pkg//:pkg.bzl", "pkg_zip")
 load("@build_bazel_apple_support//rules:universal_binary.bzl", "universal_binary")
+load("@mediapipe//mediapipe/framework/tool:mediapipe_files.bzl", "mediapipe_files")
 
 bool_flag(
     name = "macos_universal",
@@ -98,23 +99,9 @@ config_setting(
 )
 
 config_setting(
-    name = "box_tracking_switch",
+    name = "audio_classification_switch",
     flag_values = {
-        ":solutions": "box_tracking",
-    },
-)
-
-config_setting(
-    name = "instant_motion_tracking_switch",
-    flag_values = {
-        ":solutions": "instant_motion_tracking",
-    },
-)
-
-config_setting(
-    name = "objectron_switch",
-    flag_values = {
-        ":solutions": "objectron",
+        ":solutions": "audio_classification",
     },
 )
 
@@ -164,18 +151,8 @@ selects.config_setting_group(
 )
 
 selects.config_setting_group(
-    name = "enable_box_tracking",
-    match_any = [":all_solutions_switch", ":box_tracking_switch"],
-)
-
-selects.config_setting_group(
-    name = "enable_instant_motion_tracking",
-    match_any = [":all_solutions_switch", ":instant_motion_tracking_switch"],
-)
-
-selects.config_setting_group(
-    name = "enable_objectron",
-    match_any = [":all_solutions_switch", ":objectron_switch"],
+    name = "enable_audio_classification",
+    match_any = [":all_solutions_switch", ":audio_classification_switch"],
 )
 
 cc_library(
@@ -193,18 +170,20 @@ cc_library(
         "//mediapipe_api/framework:validated_graph_config",
         "//mediapipe_api/framework/formats:classification",
         "//mediapipe_api/framework/formats:detection",
+        "//mediapipe_api/framework/formats:image",
         "//mediapipe_api/framework/formats:image_frame",
         "//mediapipe_api/framework/formats:landmark",
-        "//mediapipe_api/framework/formats:matrix_data",
+        "//mediapipe_api/framework/formats:matrix",
         "//mediapipe_api/framework/formats:rect",
         "//mediapipe_api/framework/port:logging",
-        "//mediapipe_api/graphs/object_detection_3d/calculators:model_matrix",
-        "//mediapipe_api/graphs/instant_motion_tracking/calculators:transformations",
-        "//mediapipe_api/modules/face_geometry/protos:face_geometry",
-        "//mediapipe_api/modules/objectron/calculators:annotation",
+        "//mediapipe_api/tasks/c/components/containers:classification_result",
+        "//mediapipe_api/tasks/c/components/containers:detection_result",
+        "//mediapipe_api/tasks/c/components/containers:landmark",
+        "//mediapipe_api/tasks/cc/vision/face_geometry/proto:face_geometry",
+        "//mediapipe_api/tasks/cc/core:task_runner",
         "//mediapipe_api/util:resource_util",
     ] + select({
-        "@com_google_mediapipe//mediapipe/gpu:disable_gpu": [],
+        "@mediapipe//mediapipe/gpu:disable_gpu": [],
         "//conditions:default": [
             "//mediapipe_api/gpu:gl_base",
             "//mediapipe_api/gpu:gl_context",
@@ -277,9 +256,9 @@ cc_binary(
 alias(
     name = "libmediapipe_c",
     actual = select({
-        "@com_google_mediapipe//mediapipe:macos": ":libmediapipe_c_dylib",
-        "@com_google_mediapipe//mediapipe:windows": ":mediapipe_c.dll",
-        "@com_google_mediapipe//mediapipe:emscripten": ":libmediapipe_c.bc",
+        "@mediapipe//mediapipe:macos": ":libmediapipe_c_dylib",
+        "@mediapipe//mediapipe:windows": ":mediapipe_c.dll",
+        "@mediapipe//mediapipe:emscripten": ":libmediapipe_c.bc",
         "//conditions:default": ":libmediapipe_c.so",
     }),
 )
@@ -290,7 +269,7 @@ cc_library(
     hdrs = ["common.h"],
     visibility = ["//visibility:public"],
     deps = [
-        "@com_google_mediapipe//mediapipe/framework/port:logging",
+        "@mediapipe//mediapipe/framework/port:logging",
     ],
     alwayslink = True,
 )
@@ -298,16 +277,16 @@ cc_library(
 cc_library(
     name = "calculators",
     deps = [
-        "@com_google_mediapipe//mediapipe/calculators/core:pass_through_calculator",
-        "@com_google_mediapipe//mediapipe/calculators/core:packet_presence_calculator",
-        "@com_google_mediapipe//mediapipe/calculators/core:flow_limiter_calculator",
-        "@com_google_mediapipe//mediapipe/calculators/image:image_transformation_calculator",
+        "@mediapipe//mediapipe/calculators/core:pass_through_calculator",
+        "@mediapipe//mediapipe/calculators/core:packet_presence_calculator",
+        "@mediapipe//mediapipe/calculators/core:flow_limiter_calculator",
+        "@mediapipe//mediapipe/calculators/image:image_transformation_calculator",
     ] + select({
-        "@com_google_mediapipe//mediapipe/gpu:disable_gpu": [],
+        "@mediapipe//mediapipe/gpu:disable_gpu": [],
         "//conditions:default": [
-            "@com_google_mediapipe//mediapipe/gpu:gl_scaler_calculator",
-            "@com_google_mediapipe//mediapipe/gpu:image_frame_to_gpu_buffer_calculator",
-            "@com_google_mediapipe//mediapipe/gpu:gpu_buffer_to_image_frame_calculator",
+            "@mediapipe//mediapipe/gpu:gl_scaler_calculator",
+            "@mediapipe//mediapipe/gpu:image_frame_to_gpu_buffer_calculator",
+            "@mediapipe//mediapipe/gpu:gpu_buffer_to_image_frame_calculator",
         ],
     }) + select({
         ":enable_face_detection": [
@@ -339,13 +318,7 @@ cc_library(
         ":enable_object_detection": [":object_detection_calculators"],
         "//conditions:default": [],
     }) + select({
-        ":enable_box_tracking": [":box_tracking_calculators"],
-        "//conditions:default": [],
-    }) + select({
-        ":enable_instant_motion_tracking": [":instant_motion_tracking_calculators"],
-        "//conditions:default": [],
-    }) + select({
-        ":enable_objectron": [":objectron_calculators"],
+        ":enable_audio_classification": [":audio_classification_calculators"],
         "//conditions:default": [],
     }),
 )
@@ -353,27 +326,30 @@ cc_library(
 cc_library(
     name = "face_detection_calculators",
     deps = [
-        "@com_google_mediapipe//mediapipe/framework/tool:switch_mux_calculator",
+        "@mediapipe//mediapipe/framework/tool:switch_mux_calculator",
+        "@mediapipe//mediapipe/tasks/cc/vision/face_detector:face_detector",
     ] + select({
-        "@com_google_mediapipe//mediapipe/gpu:disable_gpu": [
-            "@com_google_mediapipe//mediapipe/graphs/face_detection:desktop_live_calculators",
-            "@com_google_mediapipe//mediapipe/graphs/face_detection:face_detection_full_range_desktop_live_deps",
+        "@mediapipe//mediapipe/gpu:disable_gpu": [
+            "@mediapipe//mediapipe/graphs/face_detection:desktop_live_calculators",
+            "@mediapipe//mediapipe/graphs/face_detection:face_detection_full_range_desktop_live_deps",
         ],
         "//conditions:default": [
-            "@com_google_mediapipe//mediapipe/graphs/face_detection:desktop_live_gpu_calculators",
-            "@com_google_mediapipe//mediapipe/graphs/face_detection:face_detection_full_range_mobile_gpu_deps",
+            "@mediapipe//mediapipe/graphs/face_detection:desktop_live_gpu_calculators",
+            "@mediapipe//mediapipe/graphs/face_detection:face_detection_full_range_mobile_gpu_deps",
         ],
     }),
 )
 
 cc_library(
     name = "face_mesh_calculators",
-    deps = select({
-        "@com_google_mediapipe//mediapipe/gpu:disable_gpu": [
-            "@com_google_mediapipe//mediapipe/graphs/face_mesh:desktop_live_calculators",
+    deps = [
+        "@mediapipe//mediapipe/tasks/cc/vision/face_landmarker:face_landmarker",
+    ] + select({
+        "@mediapipe//mediapipe/gpu:disable_gpu": [
+            "@mediapipe//mediapipe/graphs/face_mesh:desktop_live_calculators",
         ],
         "//conditions:default": [
-            "@com_google_mediapipe//mediapipe/graphs/face_mesh:desktop_live_gpu_calculators",
+            "@mediapipe//mediapipe/graphs/face_mesh:desktop_live_gpu_calculators",
         ],
     }),
 )
@@ -381,37 +357,41 @@ cc_library(
 cc_library(
     name = "iris_calculators",
     deps = select({
-        "@com_google_mediapipe//mediapipe/gpu:disable_gpu": [
+        "@mediapipe//mediapipe/gpu:disable_gpu": [
             "//mediapipe_api/modules/iris_landmark:iris_landmarks_from_face_landmarks_cpu",
-            "@com_google_mediapipe//mediapipe/graphs/iris_tracking:iris_tracking_cpu_deps",
+            "@mediapipe//mediapipe/graphs/iris_tracking:iris_tracking_cpu_deps",
         ],
         "//conditions:default": [
             "//mediapipe_api/modules/iris_landmark:iris_landmarks_from_face_landmarks_gpu",
-            "@com_google_mediapipe//mediapipe/graphs/iris_tracking:iris_tracking_gpu_deps",
+            "@mediapipe//mediapipe/graphs/iris_tracking:iris_tracking_gpu_deps",
         ],
     }),
 )
 
 cc_library(
     name = "hands_calculators",
-    deps = select({
-        "@com_google_mediapipe//mediapipe/gpu:disable_gpu": [
-            "@com_google_mediapipe//mediapipe/graphs/hand_tracking:desktop_tflite_calculators",
+    deps = [
+        "@mediapipe//mediapipe/tasks/cc/vision/hand_landmarker:hand_landmarker",
+    ] + select({
+        "@mediapipe//mediapipe/gpu:disable_gpu": [
+            "@mediapipe//mediapipe/graphs/hand_tracking:desktop_tflite_calculators",
         ],
         "//conditions:default": [
-            "@com_google_mediapipe//mediapipe/graphs/hand_tracking:mobile_calculators",
+            "@mediapipe//mediapipe/graphs/hand_tracking:mobile_calculators",
         ],
     }),
 )
 
 cc_library(
     name = "pose_calculators",
-    deps = select({
-        "@com_google_mediapipe//mediapipe/gpu:disable_gpu": [
-            "@com_google_mediapipe//mediapipe/graphs/pose_tracking:pose_tracking_cpu_deps",
+    deps = [
+        "@mediapipe//mediapipe/tasks/cc/vision/pose_landmarker:pose_landmarker",
+    ] + select({
+        "@mediapipe//mediapipe/gpu:disable_gpu": [
+            "@mediapipe//mediapipe/graphs/pose_tracking:pose_tracking_cpu_deps",
         ],
         "//conditions:default": [
-            "@com_google_mediapipe//mediapipe/graphs/pose_tracking:pose_tracking_gpu_deps",
+            "@mediapipe//mediapipe/graphs/pose_tracking:pose_tracking_gpu_deps",
         ],
     }),
 )
@@ -419,11 +399,11 @@ cc_library(
 cc_library(
     name = "holistic_calculators",
     deps = select({
-        "@com_google_mediapipe//mediapipe/gpu:disable_gpu": [
-            "@com_google_mediapipe//mediapipe/graphs/holistic_tracking:holistic_tracking_cpu_graph_deps",
+        "@mediapipe//mediapipe/gpu:disable_gpu": [
+            "@mediapipe//mediapipe/graphs/holistic_tracking:holistic_tracking_cpu_graph_deps",
         ],
         "//conditions:default": [
-            "@com_google_mediapipe//mediapipe/graphs/holistic_tracking:holistic_tracking_gpu_deps",
+            "@mediapipe//mediapipe/graphs/holistic_tracking:holistic_tracking_gpu_deps",
         ],
     }),
 )
@@ -431,11 +411,11 @@ cc_library(
 cc_library(
     name = "selfie_segmentation_calculators",
     deps = select({
-        "@com_google_mediapipe//mediapipe/gpu:disable_gpu": [
-            "@com_google_mediapipe//mediapipe/graphs/selfie_segmentation:selfie_segmentation_cpu_deps",
+        "@mediapipe//mediapipe/gpu:disable_gpu": [
+            "@mediapipe//mediapipe/graphs/selfie_segmentation:selfie_segmentation_cpu_deps",
         ],
         "//conditions:default": [
-            "@com_google_mediapipe//mediapipe/graphs/selfie_segmentation:selfie_segmentation_gpu_deps",
+            "@mediapipe//mediapipe/graphs/selfie_segmentation:selfie_segmentation_gpu_deps",
         ],
     }),
 )
@@ -443,12 +423,12 @@ cc_library(
 cc_library(
     name = "hair_segmentation_calculators",
     deps = select({
-        "@com_google_mediapipe//mediapipe/gpu:disable_gpu": [
-            "@com_google_mediapipe//mediapipe/graphs/hair_segmentation:desktop_calculators",
+        "@mediapipe//mediapipe/gpu:disable_gpu": [
+            "@mediapipe//mediapipe/graphs/hair_segmentation:desktop_calculators",
         ],
         "//conditions:default": [
-            "@com_google_mediapipe//mediapipe/graphs/hair_segmentation:mobile_calculators",
-            "@com_google_mediapipe//mediapipe/calculators/image:color_convert_calculator",
+            "@mediapipe//mediapipe/graphs/hair_segmentation:mobile_calculators",
+            "@mediapipe//mediapipe/calculators/image:color_convert_calculator",
         ],
     }),
 )
@@ -456,58 +436,37 @@ cc_library(
 cc_library(
     name = "object_detection_calculators",
     deps = select({
-        "@com_google_mediapipe//mediapipe/gpu:disable_gpu": [
-            "@com_google_mediapipe//mediapipe/graphs/object_detection:desktop_tflite_calculators",
+        "@mediapipe//mediapipe/gpu:disable_gpu": [
+            "@mediapipe//mediapipe/graphs/object_detection:desktop_tflite_calculators",
         ],
         "//conditions:default": [
-            "@com_google_mediapipe//mediapipe/graphs/object_detection:mobile_calculators",
+            "@mediapipe//mediapipe/graphs/object_detection:mobile_calculators",
         ],
     }),
 )
 
 cc_library(
-    name = "box_tracking_calculators",
-    deps = select({
-        "@com_google_mediapipe//mediapipe/gpu:disable_gpu": [
-            "@com_google_mediapipe//mediapipe/graphs/tracking:desktop_calculators",
-        ],
-        "//conditions:default": [
-            "@com_google_mediapipe//mediapipe/graphs/tracking:mobile_calculators",
-        ],
-    }),
-)
-
-cc_library(
-    name = "instant_motion_tracking_calculators",
-    deps = select({
-        "@com_google_mediapipe//mediapipe/gpu:disable_gpu": [
-            "//mediapipe_api/graphs/instant_motion_tracking/subgraphs:region_tracking_cpu",
-        ],
-        "//conditions:default": [
-            "@com_google_mediapipe//mediapipe/graphs/instant_motion_tracking:instant_motion_tracking_deps",
-        ],
-    }),
-)
-
-cc_library(
-    name = "objectron_calculators",
-    deps = select({
-        "@com_google_mediapipe//mediapipe/gpu:disable_gpu": [
-            "@com_google_mediapipe//mediapipe/graphs/object_detection_3d:desktop_cpu_calculators",
-        ],
-        "//conditions:default": [
-            "@com_google_mediapipe//mediapipe/graphs/object_detection_3d:mobile_calculators",
-        ],
-    }),
+    name = "audio_classification_calculators",
+    deps = ["@mediapipe//mediapipe/tasks/cc/audio/audio_classifier:audio_classifier"],
 )
 
 pkg_zip(
     name = "mediapipe_desktop",
     srcs = [
         ":libmediapipe_c",
-        "@opencv//:opencv_world_dll",
     ],
 )
+
+mediapipe_files(srcs = [
+    "blaze_face_short_range.tflite",
+    "face_landmarker_v2.task",
+    "face_landmarker_v2_with_blendshapes.task",
+    "hand_landmarker.task",
+    "pose_landmarker_full.task",
+    "pose_landmarker_heavy.task",
+    "pose_landmarker_lite.task",
+    "yamnet_audio_classifier_with_metadata.tflite",
+])
 
 pkg_asset(
     name = "mediapipe_assets",
@@ -531,25 +490,19 @@ pkg_asset(
         "//conditions:default": [],
     }) + select({
         ":enable_selfie_segmentation": [
-            "@com_google_mediapipe//mediapipe/modules/selfie_segmentation:selfie_segmentation.tflite",
+            "@mediapipe//mediapipe/modules/selfie_segmentation:selfie_segmentation.tflite",
         ],
         "//conditions:default": [],
     }) + select({
         ":enable_hair_segmentation": [
-            "@com_google_mediapipe//mediapipe/models:hair_segmentation.tflite",
+            "@mediapipe//mediapipe/models:hair_segmentation.tflite",
         ],
         "//conditions:default": [],
     }) + select({
         ":enable_object_detection": [":object_detection_assets"],
         "//conditions:default": [],
     }) + select({
-        ":enable_box_tracking": [":box_tracking_assets"],
-        "//conditions:default": [],
-    }) + select({
-        ":enable_instant_motion_tracking": [":instant_motion_tracking_assets"],
-        "//conditions:default": [],
-    }) + select({
-        ":enable_objectron": [":objectron_assets"],
+        ":enable_audio_classification": [":audio_classification_assets"],
         "//conditions:default": [],
     }),
 )
@@ -557,103 +510,88 @@ pkg_asset(
 filegroup(
     name = "face_detection_assets",
     srcs = [
-        "@com_google_mediapipe//mediapipe/modules/face_detection:face_detection_full_range_sparse.tflite",
-        "@com_google_mediapipe//mediapipe/modules/face_detection:face_detection_full_range.tflite",
-        "@com_google_mediapipe//mediapipe/modules/face_detection:face_detection_short_range.tflite",
+        ":blaze_face_short_range.tflite",
+        "@mediapipe//mediapipe/modules/face_detection:face_detection_full_range_sparse.tflite",
+        "@mediapipe//mediapipe/modules/face_detection:face_detection_full_range.tflite",
+        "@mediapipe//mediapipe/modules/face_detection:face_detection_short_range.tflite",
     ],
 )
 
 filegroup(
     name = "face_mesh_assets",
     srcs = [
-        "@com_google_mediapipe//mediapipe/modules/face_detection:face_detection_short_range.tflite",
-        "@com_google_mediapipe//mediapipe/modules/face_landmark:face_landmark.tflite",
-        "@com_google_mediapipe//mediapipe/modules/face_landmark:face_landmark_with_attention.tflite",
+        ":face_landmarker_v2.task",
+        ":face_landmarker_v2_with_blendshapes.task",
+        "@mediapipe//mediapipe/modules/face_detection:face_detection_short_range.tflite",
+        "@mediapipe//mediapipe/modules/face_landmark:face_landmark.tflite",
+        "@mediapipe//mediapipe/modules/face_landmark:face_landmark_with_attention.tflite",
     ],
 )
 
 filegroup(
     name = "iris_assets",
     srcs = [
-        "@com_google_mediapipe//mediapipe/modules/face_detection:face_detection_short_range.tflite",
-        "@com_google_mediapipe//mediapipe/modules/face_landmark:face_landmark.tflite",
-        "@com_google_mediapipe//mediapipe/modules/iris_landmark:iris_landmark.tflite",
+        "@mediapipe//mediapipe/modules/face_detection:face_detection_short_range.tflite",
+        "@mediapipe//mediapipe/modules/face_landmark:face_landmark.tflite",
+        "@mediapipe//mediapipe/modules/iris_landmark:iris_landmark.tflite",
     ],
 )
 
 filegroup(
     name = "hands_assets",
     srcs = [
-        "@com_google_mediapipe//mediapipe/modules/hand_landmark:hand_landmark_full.tflite",
-        "@com_google_mediapipe//mediapipe/modules/hand_landmark:hand_landmark_lite.tflite",
-        "@com_google_mediapipe//mediapipe/modules/hand_landmark:handedness.txt",
-        "@com_google_mediapipe//mediapipe/modules/palm_detection:palm_detection_full.tflite",
-        "@com_google_mediapipe//mediapipe/modules/palm_detection:palm_detection_lite.tflite",
+        ":hand_landmarker.task",
+        "@mediapipe//mediapipe/modules/hand_landmark:hand_landmark_full.tflite",
+        "@mediapipe//mediapipe/modules/hand_landmark:hand_landmark_lite.tflite",
+        "@mediapipe//mediapipe/modules/hand_landmark:handedness.txt",
+        "@mediapipe//mediapipe/modules/palm_detection:palm_detection_full.tflite",
+        "@mediapipe//mediapipe/modules/palm_detection:palm_detection_lite.tflite",
     ],
 )
 
 filegroup(
     name = "pose_assets",
     srcs = [
-        "@com_google_mediapipe//mediapipe/modules/pose_detection:pose_detection.tflite",
-        "@com_google_mediapipe//mediapipe/modules/pose_landmark:pose_landmark_full.tflite",
-        "@com_google_mediapipe//mediapipe/modules/pose_landmark:pose_landmark_heavy.tflite",
-        "@com_google_mediapipe//mediapipe/modules/pose_landmark:pose_landmark_lite.tflite",
+        ":pose_landmarker_full.task",
+        ":pose_landmarker_heavy.task",
+        ":pose_landmarker_lite.task",
+        "@mediapipe//mediapipe/modules/pose_detection:pose_detection.tflite",
+        "@mediapipe//mediapipe/modules/pose_landmark:pose_landmark_full.tflite",
+        "@mediapipe//mediapipe/modules/pose_landmark:pose_landmark_heavy.tflite",
+        "@mediapipe//mediapipe/modules/pose_landmark:pose_landmark_lite.tflite",
     ],
 )
 
 filegroup(
     name = "holistic_assets",
     srcs = [
-        "@com_google_mediapipe//mediapipe/modules/face_detection:face_detection_short_range.tflite",
-        "@com_google_mediapipe//mediapipe/modules/face_landmark:face_landmark.tflite",
-        "@com_google_mediapipe//mediapipe/modules/face_landmark:face_landmark_with_attention.tflite",
-        "@com_google_mediapipe//mediapipe/modules/hand_landmark:hand_landmark_full.tflite",
-        "@com_google_mediapipe//mediapipe/modules/hand_landmark:handedness.txt",
-        "@com_google_mediapipe//mediapipe/modules/holistic_landmark:hand_recrop.tflite",
-        "@com_google_mediapipe//mediapipe/modules/iris_landmark:iris_landmark.tflite",
-        "@com_google_mediapipe//mediapipe/modules/palm_detection:palm_detection_full.tflite",
-        "@com_google_mediapipe//mediapipe/modules/pose_detection:pose_detection.tflite",
-        "@com_google_mediapipe//mediapipe/modules/pose_landmark:pose_landmark_full.tflite",
-        "@com_google_mediapipe//mediapipe/modules/pose_landmark:pose_landmark_heavy.tflite",
-        "@com_google_mediapipe//mediapipe/modules/pose_landmark:pose_landmark_lite.tflite",
+        "@mediapipe//mediapipe/modules/face_detection:face_detection_short_range.tflite",
+        "@mediapipe//mediapipe/modules/face_landmark:face_landmark.tflite",
+        "@mediapipe//mediapipe/modules/face_landmark:face_landmark_with_attention.tflite",
+        "@mediapipe//mediapipe/modules/hand_landmark:hand_landmark_full.tflite",
+        "@mediapipe//mediapipe/modules/hand_landmark:handedness.txt",
+        "@mediapipe//mediapipe/modules/holistic_landmark:hand_recrop.tflite",
+        "@mediapipe//mediapipe/modules/iris_landmark:iris_landmark.tflite",
+        "@mediapipe//mediapipe/modules/palm_detection:palm_detection_full.tflite",
+        "@mediapipe//mediapipe/modules/pose_detection:pose_detection.tflite",
+        "@mediapipe//mediapipe/modules/pose_landmark:pose_landmark_full.tflite",
+        "@mediapipe//mediapipe/modules/pose_landmark:pose_landmark_heavy.tflite",
+        "@mediapipe//mediapipe/modules/pose_landmark:pose_landmark_lite.tflite",
     ],
 )
 
 filegroup(
     name = "object_detection_assets",
     srcs = [
-        "@com_google_mediapipe//mediapipe/models:ssdlite_object_detection.tflite",
-        "@com_google_mediapipe//mediapipe/models:ssdlite_object_detection_labelmap.txt",
+        "@mediapipe//mediapipe/models:ssdlite_object_detection.tflite",
+        "@mediapipe//mediapipe/models:ssdlite_object_detection_labelmap.txt",
     ],
 )
 
 filegroup(
-    name = "box_tracking_assets",
+    name = "audio_classification_assets",
     srcs = [
-        "@com_google_mediapipe//mediapipe/models:ssdlite_object_detection.tflite",
-        "@com_google_mediapipe//mediapipe/models:ssdlite_object_detection_labelmap.txt",
-    ],
-)
-
-filegroup(
-    name = "instant_motion_tracking_assets",
-    srcs = [
-        "@com_google_mediapipe//mediapipe/models:ssdlite_object_detection.tflite",
-    ],
-)
-
-filegroup(
-    name = "objectron_assets",
-    srcs = [
-        "@com_google_mediapipe//mediapipe/modules/objectron:object_detection_3d_camera.tflite",
-        "@com_google_mediapipe//mediapipe/modules/objectron:object_detection_3d_chair.tflite",
-        "@com_google_mediapipe//mediapipe/modules/objectron:object_detection_3d_chair_1stage.tflite",
-        "@com_google_mediapipe//mediapipe/modules/objectron:object_detection_3d_cup.tflite",
-        "@com_google_mediapipe//mediapipe/modules/objectron:object_detection_3d_sneakers.tflite",
-        "@com_google_mediapipe//mediapipe/modules/objectron:object_detection_3d_sneakers_1stage.tflite",
-        "@com_google_mediapipe//mediapipe/modules/objectron:object_detection_oidv4_labelmap.txt",
-        "@com_google_mediapipe//mediapipe/modules/objectron:object_detection_ssd_mobilenetv2_oidv4_fp16.tflite",
+        ":yamnet_audio_classifier_with_metadata.tflite",
     ],
 )
 
@@ -673,13 +611,20 @@ pkg_zip(
         "//mediapipe_api/framework/formats/motion:proto_srcs",
         "//mediapipe_api/framework/formats/object_detection:proto_srcs",
         "//mediapipe_api/gpu:proto_srcs",
-        "//mediapipe_api/graphs/instant_motion_tracking/calculators:proto_srcs",
-        "//mediapipe_api/graphs/object_detection_3d/calculators:proto_srcs",
         "//mediapipe_api/modules/face_detection:proto_srcs",
-        "//mediapipe_api/modules/face_geometry:proto_srcs",
-        "//mediapipe_api/modules/face_geometry/protos:proto_srcs",
         "//mediapipe_api/modules/holistic_landmark/calculators:proto_srcs",
-        "//mediapipe_api/modules/objectron/calculators:proto_srcs",
+        "//mediapipe_api/tasks/cc/core/proto:proto_srcs",
+        "//mediapipe_api/tasks/cc/components/containers/proto:proto_srcs",
+        "//mediapipe_api/tasks/cc/components/processors/proto:proto_srcs",
+        "//mediapipe_api/tasks/cc/audio/audio_classifier/proto:proto_srcs",
+        "//mediapipe_api/tasks/cc/vision/face_detector/proto:proto_srcs",
+        "//mediapipe_api/tasks/cc/vision/face_landmarker/proto:proto_srcs",
+        "//mediapipe_api/tasks/cc/vision/face_geometry/proto:proto_srcs",
+        "//mediapipe_api/tasks/cc/vision/face_geometry/calculators:proto_srcs",
+        "//mediapipe_api/tasks/cc/vision/hand_detector/proto:proto_srcs",
+        "//mediapipe_api/tasks/cc/vision/hand_landmarker/proto:proto_srcs",
+        "//mediapipe_api/tasks/cc/vision/pose_detector/proto:proto_srcs",
+        "//mediapipe_api/tasks/cc/vision/pose_landmarker/proto:proto_srcs",
         "//mediapipe_api/util:proto_srcs",
         "//mediapipe_api/util/tracking:proto_srcs",
     ],

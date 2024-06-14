@@ -1,0 +1,25 @@
+# TODO: attach built packages to the release page
+name: Release Packages
+on:
+  workflow_dispatch: {}
+  push:
+    tags:
+      - v*
+jobs:
+  package-for-development:
+    uses: ./.github/workflows/package.yml
+    with:
+      ref: ${{ github.event.ref }}
+      packageName: package-for-development
+      linuxBuildArgs: '--desktop gpu --opencv cmake'
+      windowsBuildArgs: '--desktop cpu --opencv cmake'
+    secrets: inherit
+
+  package-for-production:
+    uses: ./.github/workflows/package.yml
+    with:
+      ref: ${{ github.event.ref }}
+      packageName: package-for-production
+      linuxBuildArgs: '--linkopt="-s" --desktop gpu --opencv cmake'
+      windowsBuildArgs: '--desktop cpu --opencv cmake'
+    secrets: inherit

@@ -18,7 +18,7 @@ cc_library(
     deps = [
         "//mediapipe_api:common",
         "//mediapipe_api/external:protobuf",
-        "@com_google_mediapipe//mediapipe/framework:calculator_framework",
+        "@mediapipe//mediapipe/framework:calculator_framework",
     ],
     alwayslink = True,
 )
@@ -31,13 +31,12 @@ cc_library(
         ":packet",
         "//mediapipe_api:common",
         "//mediapipe_api/external/absl:status",
-        "//mediapipe_api/external/absl:statusor",
-        "@com_google_mediapipe//mediapipe/framework:calculator_framework",
+        "@mediapipe//mediapipe/framework:calculator_framework",
     ] + select({
-        "@com_google_mediapipe//mediapipe/gpu:disable_gpu": [],
+        "@mediapipe//mediapipe/gpu:disable_gpu": [],
         "//conditions:default": [
-            "@com_google_mediapipe//mediapipe/gpu:gl_calculator_helper",
-            "@com_google_mediapipe//mediapipe/gpu:gpu_shared_data_internal",
+            "@mediapipe//mediapipe/gpu:gl_calculator_helper",
+            "@mediapipe//mediapipe/gpu:gpu_shared_data_internal",
         ],
     }),
     alwayslink = True,
@@ -49,8 +48,7 @@ cc_library(
     hdrs = ["output_stream_poller.h"],
     deps = [
         "//mediapipe_api:common",
-        "//mediapipe_api/external/absl:statusor",
-        "@com_google_mediapipe//mediapipe/framework:calculator_framework",
+        "@mediapipe//mediapipe/framework:calculator_framework",
     ],
     alwayslink = True,
 )
@@ -62,7 +60,7 @@ cc_library(
     deps = [
         "//mediapipe_api:common",
         "//mediapipe_api/external:protobuf",
-        "@com_google_mediapipe//mediapipe/framework:packet",
+        "@mediapipe//mediapipe/framework:packet",
     ],
     alwayslink = True,
 )
@@ -73,7 +71,7 @@ cc_library(
     hdrs = ["timestamp.h"],
     deps = [
         "//mediapipe_api:common",
-        "@com_google_mediapipe//mediapipe/framework:timestamp",
+        "@mediapipe//mediapipe/framework:timestamp",
     ],
     alwayslink = True,
 )
@@ -85,7 +83,8 @@ cc_library(
     deps = [
         "//mediapipe_api:common",
         "//mediapipe_api/external:protobuf",
-        "@com_google_mediapipe//mediapipe/framework:validated_graph_config",
+        "//mediapipe_api/external/absl:statusor",
+        "@mediapipe//mediapipe/framework:validated_graph_config",
     ],
     alwayslink = True,
 )
@@ -110,7 +109,7 @@ csharp_proto_src(
     name = "calculator_cs",
     proto_src = "mediapipe/framework/calculator.proto",
     deps = [
-        "@com_google_mediapipe//mediapipe/framework:protos_src",
+        "@mediapipe//mediapipe/framework:protos_src",
     ],
 )
 
@@ -118,7 +117,7 @@ csharp_proto_src(
     name = "calculator_options_cs",
     proto_src = "mediapipe/framework/calculator_options.proto",
     deps = [
-        "@com_google_mediapipe//mediapipe/framework:protos_src",
+        "@mediapipe//mediapipe/framework:protos_src",
     ],
 )
 
@@ -126,7 +125,7 @@ csharp_proto_src(
     name = "calculator_profile_cs",
     proto_src = "mediapipe/framework/calculator_profile.proto",
     deps = [
-        "@com_google_mediapipe//mediapipe/framework:protos_src",
+        "@mediapipe//mediapipe/framework:protos_src",
     ],
 )
 
@@ -134,7 +133,7 @@ csharp_proto_src(
     name = "mediapipe_options_cs",
     proto_src = "mediapipe/framework/mediapipe_options.proto",
     deps = [
-        "@com_google_mediapipe//mediapipe/framework:protos_src",
+        "@mediapipe//mediapipe/framework:protos_src",
     ],
 )
 
@@ -142,7 +141,7 @@ csharp_proto_src(
     name = "packet_factory_cs",
     proto_src = "mediapipe/framework/packet_factory.proto",
     deps = [
-        "@com_google_mediapipe//mediapipe/framework:protos_src",
+        "@mediapipe//mediapipe/framework:protos_src",
     ],
 )
 
@@ -150,7 +149,7 @@ csharp_proto_src(
     name = "packet_generator_cs",
     proto_src = "mediapipe/framework/packet_generator.proto",
     deps = [
-        "@com_google_mediapipe//mediapipe/framework:protos_src",
+        "@mediapipe//mediapipe/framework:protos_src",
     ],
 )
 
@@ -158,7 +157,7 @@ csharp_proto_src(
     name = "status_handler_cs",
     proto_src = "mediapipe/framework/status_handler.proto",
     deps = [
-        "@com_google_mediapipe//mediapipe/framework:protos_src",
+        "@mediapipe//mediapipe/framework:protos_src",
     ],
 )
 
@@ -166,7 +165,7 @@ csharp_proto_src(
     name = "stream_handler_cs",
     proto_src = "mediapipe/framework/stream_handler.proto",
     deps = [
-        "@com_google_mediapipe//mediapipe/framework:protos_src",
+        "@mediapipe//mediapipe/framework:protos_src",
     ],
 )
 
@@ -174,6 +173,6 @@ csharp_proto_src(
     name = "thread_pool_executor_cs",
     proto_src = "mediapipe/framework/thread_pool_executor.proto",
     deps = [
-        "@com_google_mediapipe//mediapipe/framework:protos_src",
+        "@mediapipe//mediapipe/framework:protos_src",
     ],
 )

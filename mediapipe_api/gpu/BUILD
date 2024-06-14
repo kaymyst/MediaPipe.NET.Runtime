@@ -16,7 +16,7 @@ cc_library(
     hdrs = ["gl_base.h"],
     deps = [
         "//mediapipe_api:common",
-        "@com_google_mediapipe//mediapipe/gpu:gl_base",
+        "@mediapipe//mediapipe/gpu:gl_base",
     ],
     alwayslink = True,
 )
@@ -31,7 +31,7 @@ cc_library(
     deps = [
         "//mediapipe_api:common",
         "//mediapipe_api/external/absl:status",
-        "@com_google_mediapipe//mediapipe/gpu:gl_calculator_helper",
+        "@mediapipe//mediapipe/gpu:gl_calculator_helper",
     ],
     alwayslink = True,
 )
@@ -42,8 +42,7 @@ cc_library(
     hdrs = ["gl_context.h"],
     deps = [
         "//mediapipe_api:common",
-        "//mediapipe_api/external/absl:statusor",
-        "@com_google_mediapipe//mediapipe/gpu:gl_context",
+        "@mediapipe//mediapipe/gpu:gl_context",
     ],
     alwayslink = True,
 )
@@ -58,7 +57,7 @@ cc_library(
     deps = [
         ":gl_context",
         "//mediapipe_api:common",
-        "@com_google_mediapipe//mediapipe/gpu:gl_texture_buffer",
+        "@mediapipe//mediapipe/gpu:gl_texture_buffer",
     ],
     alwayslink = True,
 )
@@ -74,9 +73,8 @@ cc_library(
         ":gl_texture_buffer",
         "//mediapipe_api:common",
         "//mediapipe_api/external/absl:status",
-        "//mediapipe_api/external/absl:statusor",
         "//mediapipe_api/framework:packet",
-        "@com_google_mediapipe//mediapipe/gpu:gpu_buffer",
+        "@mediapipe//mediapipe/gpu:gpu_buffer",
     ],
     alwayslink = True,
 )
@@ -87,7 +85,7 @@ cc_library(
     hdrs = ["gpu_buffer_format.h"],
     deps = [
         "//mediapipe_api:common",
-        "@com_google_mediapipe//mediapipe/gpu:gpu_buffer_format",
+        "@mediapipe//mediapipe/gpu:gpu_buffer_format",
     ],
     alwayslink = True,
 )
@@ -100,8 +98,7 @@ cc_library(
         ":gl_context",
         "//mediapipe_api:common",
         "//mediapipe_api/external/absl:status",
-        "//mediapipe_api/external/absl:statusor",
-        "@com_google_mediapipe//mediapipe/gpu:gpu_shared_data_internal",
+        "@mediapipe//mediapipe/gpu:gpu_shared_data_internal",
     ],
     alwayslink = True,
 )
@@ -123,7 +120,7 @@ csharp_proto_src(
     name = "gpu_origin_cs",
     proto_src = "mediapipe/gpu/gpu_origin.proto",
     deps = [
-        "@com_google_mediapipe//mediapipe/gpu:protos_src",
+        "@mediapipe//mediapipe/gpu:protos_src",
     ],
 )
 
@@ -131,7 +128,7 @@ csharp_proto_src(
     name = "scale_mode_cs",
     proto_src = "mediapipe/gpu/scale_mode.proto",
     deps = [
-        "@com_google_mediapipe//mediapipe/gpu:protos_src",
+        "@mediapipe//mediapipe/gpu:protos_src",
     ],
 )
 
@@ -139,8 +136,8 @@ csharp_proto_src(
     name = "gl_scaler_calculator_cs",
     proto_src = "mediapipe/gpu/gl_scaler_calculator.proto",
     deps = [
-        "@com_google_mediapipe//mediapipe/gpu:protos_src",
-        "@com_google_mediapipe//mediapipe/framework:protos_src",
+        "@mediapipe//mediapipe/gpu:protos_src",
+        "@mediapipe//mediapipe/framework:protos_src",
     ],
 )
 
@@ -148,8 +145,8 @@ csharp_proto_src(
     name = "gl_surface_sink_calculator_cs",
     proto_src = "mediapipe/gpu/gl_surface_sink_calculator.proto",
     deps = [
-        "@com_google_mediapipe//mediapipe/gpu:protos_src",
-        "@com_google_mediapipe//mediapipe/framework:protos_src",
+        "@mediapipe//mediapipe/gpu:protos_src",
+        "@mediapipe//mediapipe/framework:protos_src",
     ],
 )
 
@@ -157,8 +154,8 @@ csharp_proto_src(
     name = "copy_calculator_cs",
     proto_src = "mediapipe/gpu/copy_calculator.proto",
     deps = [
-        "@com_google_mediapipe//mediapipe/gpu:protos_src",
-        "@com_google_mediapipe//mediapipe/framework:protos_src",
+        "@mediapipe//mediapipe/gpu:protos_src",
+        "@mediapipe//mediapipe/framework:protos_src",
     ],
 )
 
@@ -166,7 +163,7 @@ csharp_proto_src(
     name = "gl_context_options_cs",
     proto_src = "mediapipe/gpu/gl_context_options.proto",
     deps = [
-        "@com_google_mediapipe//mediapipe/gpu:protos_src",
-        "@com_google_mediapipe//mediapipe/framework:protos_src",
+        "@mediapipe//mediapipe/gpu:protos_src",
+        "@mediapipe//mediapipe/framework:protos_src",
     ],
 )
