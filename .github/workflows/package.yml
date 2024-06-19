@@ -73,18 +73,11 @@ jobs:
           npm pack
           mv com.github.homuler.mediapipe-*.tgz ../..
 
-      - name: Export unitypackage
-        if: ${{ env.BUILD_UNITYPACKAGE == '1' }}
-        run: |
-          unity-editor -quit -batchmode -nographics -silent-crashes -logFile -projectPath . -executeMethod PackageExporter.Export
-
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
           name: ${{ inputs.packageName }}
           path: |
-            com.github.homuler.mediapipe-*.tgz
-            *.unitypackage
             MediaPipeUnityPlugin-all.zip
           retention-days: 7
 
