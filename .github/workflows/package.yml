@@ -47,7 +47,7 @@ jobs:
         
       - name: copy mediapipe_c.dll
         run: |
-          copy Packages/com.github.homuler.mediapipe/Runtime/Plugins/mediapipe_c.dll Mediapipe.Net.Runtime.CPU\runtimes\win-x64\native\
+          copy Packages\com.github.homuler.mediapipe\Runtime\Plugins\mediapipe_c.dll Mediapipe.Net.Runtime.CPU\runtimes\win-x64\native\
         shell: cmd
 
       - name: build dotnet package
