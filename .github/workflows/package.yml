@@ -67,12 +67,6 @@ jobs:
         run: |
           zip -r MediaPipeUnityPlugin-all.zip . -x .git/**\*
 
-      - name: Export tarball
-        run: |
-          cd Packages/com.github.homuler.mediapipe
-          npm pack
-          mv com.github.homuler.mediapipe-*.tgz ../..
-
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
