@@ -23,5 +23,6 @@ jobs:
       - name: build dotnet package
         run: |
           cd Mediapipe.Net.Runtime.CPU
+          dir
           dotnet build
         shell: cmd
