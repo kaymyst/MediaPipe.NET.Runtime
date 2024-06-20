@@ -45,17 +45,6 @@ jobs:
             python build.py build --bazel_build_opts="${{ inputs.bazelBuildArgs }}" ${{ inputs.windowsBuildArgs }} -vv
         shell: cmd
         
-      - name: copy mediapipe_c.dll
-        run: |
-          copy Packages\com.github.homuler.mediapipe\Runtime\Plugins\mediapipe_c.dll Mediapipe.Net.Runtime.CPU\runtimes\win-x64\native\
-        shell: cmd
-
-      - name: build dotnet package
-        run: |
-          cd Mediapipe.Net.Runtime.CPU
-          dotnet build
-        shell: cmd
-
       - name: Upload mediapipe_c.dll
         uses: actions/upload-artifact@v3
         with:
