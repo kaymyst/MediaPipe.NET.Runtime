@@ -1,0 +1,27 @@
+name: nuget
+on:
+  workflow_call:
+    inputs:
+      ref:
+        type: string
+        required: true
+      packageName:
+        type: string
+        default: windows-build
+      nugetPushArgs:
+        type: string
+        default: ''
+
+jobs:
+  windows-build:
+    runs-on: windows-2019
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: build dotnet package
+        run: |
+          cd Mediapipe.Net.Runtime.CPU
+          dotnet build
+        shell: cmd
