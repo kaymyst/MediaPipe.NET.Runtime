@@ -4,7 +4,7 @@ on:
     inputs:
       nugetPushArgs:
         type: string
-        description: A value for `--bazel_build_opts`
+        description: A token for pushing to nuget
 jobs:
   package:
     uses: ./.github/workflows/nuget.yml

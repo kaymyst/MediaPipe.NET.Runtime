@@ -50,6 +50,16 @@ jobs:
         with:
           name: ${{ inputs.packageName }}-mediapipe_c.dll
           path: Packages/com.github.homuler.mediapipe/Runtime/Plugins/mediapipe_c.dll
+          
+      - name: build dotnet package
+        run: |
+          dir
+          cd Mediapipe.Net.Runtime.CPU          
+          mkdir runtimes\win-x64\native
+          copy ..\Packages\com.github.homuler.mediapipe\Runtime\Plugins\mediapipe_c.dll .\runtimes\win-x64\native\
+          dotnet build
+          dotnet nuget push *.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{secrets.NUGET_TOKEN}} --skip-duplicate
+        shell: cmd
 
   package:
     runs-on: ubuntu-latest
