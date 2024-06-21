@@ -58,7 +58,7 @@ jobs:
           mkdir runtimes\win-x64\native
           copy ..\Packages\com.github.homuler.mediapipe\Runtime\Plugins\mediapipe_c.dll .\runtimes\win-x64\native\
           dotnet build
-          dotnet nuget push *.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{secrets.NUGET_TOKEN}} --skip-duplicate
+          dotnet nuget push .\bin\Debug\*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{secrets.NUGET_TOKEN}} --skip-duplicate
         shell: cmd
 
   package:
